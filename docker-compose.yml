@@ -1,0 +1,34 @@
+# ./docker-compose.yml
+
+version: '3.5'
+
+networks:
+  default:
+    name: MSG-Couchbase-Sync_gateway
+services:
+  server:
+    build:
+      context: .
+      dockerfile: ./docker/server/Dockerfile
+    container_name: couchbase-server
+    ports:
+      - "8091-8094:8091-8094"
+      - "11210:11210"
+    volumes:
+      - ./docker/server/config.sh:/config.sh
+      - couchbase-server:/opt/couchbase/var
+  sync-gateway:
+    container_name: couchbase-sync_gateway
+    depends_on:
+      - server
+    entrypoint: ["/config.sh"]
+    image: couchbase/sync-gateway:2.8.3-community
+    ports:
+      - "4984:4984"
+      - "4985:4985"
+    volumes:
+      - ./docker/sync-gateway/config.json:/etc/sync_gateway/template.json
+      - ./docker/sync-gateway/config.sh:/config.sh
+      - ./docker/sync-gateway/sync-functions/sync-function.js:/etc/sync_gateway/sync_functions/sync-function.js
+volumes:
+  couchbase-server:
